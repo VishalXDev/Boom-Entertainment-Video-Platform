@@ -5,4 +5,4 @@ const purchaseSchema = new mongoose.Schema({
   video: { type: mongoose.Schema.Types.ObjectId, ref: 'Video' },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Purchase', purchaseSchema);
+module.exports = mongoose.model('Purchase', purchaseSchema); // ✅ Add this

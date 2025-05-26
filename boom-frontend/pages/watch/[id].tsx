@@ -1,24 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import API from '../../services/api';
-// Removed user import from useAuth because it's unused
-// import { useAuth } from '../../context/AuthContext';
+import Layout from '../../components/Layout';
 
 interface Comment {
   _id: string;
   text: string;
-  user?: {
-    username: string;
-  };
+  user?: { username: string };
 }
 
 interface Video {
   _id: string;
   type: 'short' | 'long';
   title: string;
-  creator?: {
-    username: string;
-  };
+  creator?: { username: string };
   description: string;
   url: string;
   videoUrl?: string;
@@ -28,29 +23,29 @@ interface Video {
 }
 
 export default function WatchPage() {
-  // Removed unused 'user'
-  // const { user } = useAuth();
-
   const router = useRouter();
   const { id } = router.query;
+
   const [video, setVideo] = useState<Video | null>(null);
-  const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(true);
+  const [comment, setComment] = useState('');
   const [giftAmount, setGiftAmount] = useState(0);
   const [msg, setMsg] = useState('');
 
+  const fetchVideo = async () => {
+    const res = await API.get(`/videos/${id}`);
+    setVideo(res.data);
+  };
+
   useEffect(() => {
     if (!id) return;
-    API.get(`/videos/${id}`)
-      .then(res => setVideo(res.data))
-      .finally(() => setLoading(false));
+    fetchVideo().finally(() => setLoading(false));
   }, [id]);
 
   const postComment = async () => {
     if (!comment.trim()) return;
     await API.post('/comments', { videoId: id, text: comment });
-    const res = await API.get(`/videos/${id}`);
-    setVideo(res.data);
+    await fetchVideo();
     setComment('');
   };
 
@@ -61,98 +56,100 @@ export default function WatchPage() {
     setGiftAmount(0);
   };
 
-  if (loading) return <p className="p-4">Loading...</p>;
-  if (!video) return <p className="p-4">Video not found.</p>;
+  if (loading) return <Layout><p className="p-4">Loading...</p></Layout>;
+  if (!video) return <Layout><p className="p-4">Video not found.</p></Layout>;
 
-  const {
-    type,
-    title,
-    creator,
-    description,
-    url,
-    videoUrl,
-    comments,
-    price,
-    purchased,
-  } = video;
+  const { type, title, creator, description, url, videoUrl, comments, price, purchased } = video;
 
   if (type === 'long' && price > 0 && !purchased) {
     return (
-      <div className="max-w-xl mx-auto p-6">
-        <h1 className="text-xl font-bold mb-4">{title}</h1>
-        <p>This is a paid video. Please purchase it to watch.</p>
-      </div>
+      <Layout>
+        <div className="max-w-xl mx-auto p-6 text-center">
+          <h1 className="text-2xl font-bold mb-4">{title}</h1>
+          <p className="text-gray-300">This is a paid video. Please purchase it to watch.</p>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-6 px-4 space-y-4">
-      <h1 className="text-2xl font-bold">{title}</h1>
-      <p className="text-sm text-gray-600">by {creator?.username}</p>
-      <p>{description}</p>
-
-      {type === 'short' ? (
-        <video src={videoUrl} controls className="w-full rounded" />
-      ) : (
-        <iframe
-          src={convertToEmbed(url)}
-          className="w-full aspect-video rounded"
-          allowFullScreen
-        />
-      )}
-
-      <div className="mt-4">
-        <label className="block mb-2 font-semibold">Gift the Creator 🎁</label>
-        <input
-          type="number"
-          placeholder="₹ Amount"
-          value={giftAmount}
-          onChange={e => setGiftAmount(+e.target.value)}
-          className="w-full p-2 border rounded mb-2"
-        />
-        <button
-          onClick={sendGift}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Send Gift
-        </button>
-        {msg && <p className="text-green-600 mt-2">{msg}</p>}
-      </div>
-
-      <div className="mt-6">
-        <h3 className="text-lg font-bold mb-2">💬 Comments</h3>
-        <div className="space-y-2">
-          {comments?.map((c: Comment) => (
-            <div key={c._id} className="p-2 bg-gray-100 rounded">
-              <p className="text-sm font-semibold">{c.user?.username}</p>
-              <p>{c.text}</p>
-            </div>
-          ))}
+    <Layout>
+      <div className="max-w-2xl mx-auto py-6 px-4 space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="text-sm text-gray-400">by {creator?.username || 'Unknown'}</p>
+          <p className="text-gray-300 mt-1">{description}</p>
         </div>
-        <div className="mt-4 flex space-x-2">
-          <input
-            type="text"
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="flex-1 p-2 border rounded"
-          />
-          <button
-            onClick={postComment}
-            className="bg-black text-white px-4 rounded"
-          >
-            Post
-          </button>
+
+        <div className="rounded-xl overflow-hidden">
+          {type === 'short' ? (
+            <video src={videoUrl} controls className="w-full rounded-lg bg-black" />
+          ) : (
+            <iframe
+              src={convertToEmbed(url)}
+              className="w-full aspect-video rounded-lg"
+              allowFullScreen
+              title="Long form video"
+            />
+          )}
+        </div>
+
+        {/* Gifting */}
+        <div>
+          <label className="block mb-2 font-semibold">🎁 Gift the Creator</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder="₹ Amount"
+              value={giftAmount}
+              onChange={e => setGiftAmount(+e.target.value)}
+              className="flex-1 p-2 rounded-lg bg-gray-800 border border-gray-700 text-white"
+            />
+            <button
+              onClick={sendGift}
+              className="bg-blue-600 px-4 py-2 rounded-lg font-medium"
+            >
+              Send
+            </button>
+          </div>
+          {msg && <p className="text-green-400 mt-2">{msg}</p>}
+        </div>
+
+        {/* Comments */}
+        <div>
+          <h3 className="text-lg font-bold mb-3">💬 Comments</h3>
+          <div className="space-y-2">
+            {comments?.map((c) => (
+              <div key={c._id} className="p-3 bg-gray-800 rounded-lg">
+                <p className="text-sm font-semibold">{c.user?.username}</p>
+                <p className="text-gray-300">{c.text}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              type="text"
+              value={comment}
+              onChange={e => setComment(e.target.value)}
+              placeholder="Add a comment..."
+              className="flex-1 p-2 rounded-lg bg-gray-800 border border-gray-700 text-white"
+            />
+            <button
+              onClick={postComment}
+              className="bg-black text-white px-4 rounded-lg"
+            >
+              Post
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 
 function convertToEmbed(url: string) {
-  const youtubeMatch = url.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]+)/
-  );
+  const youtubeMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]+)/);
   if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;

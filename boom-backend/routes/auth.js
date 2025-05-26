@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { register, login } = require('../controllers/authController');
 const auth = require('../middleware/auth');
+const User = require('../models/User'); // ✅ Add this
 router.post('/register', register);
 router.post('/login', login);
 router.get('/me', auth, async (req, res) => {

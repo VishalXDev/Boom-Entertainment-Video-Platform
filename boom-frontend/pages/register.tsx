@@ -37,12 +37,14 @@ export default function Register() {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded-xl shadow-md space-y-4 w-full max-w-md"
       >
-        <h1 className="text-xl font-bold">Register</h1>
+        <h1 className="text-2xl font-bold text-gray-800 text-center">
+          Register
+        </h1>
         {error && <p className="text-red-500">{error}</p>}
         <input
           type="text"
           placeholder="Username"
-          className="w-full p-2 border rounded"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           value={form.username}
           onChange={(e) => setForm({ ...form, username: e.target.value })}
         />

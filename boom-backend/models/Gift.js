@@ -7,4 +7,4 @@ const giftSchema = new mongoose.Schema({
   amount:    { type: Number, required: true },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Gift', giftSchema);
+module.exports = mongoose.model('Gift', giftSchema); // ✅ Add this
