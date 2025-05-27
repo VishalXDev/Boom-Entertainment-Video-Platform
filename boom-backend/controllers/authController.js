@@ -9,14 +9,23 @@ exports.register = async (req, res) => {
     if (user) return res.status(400).json({ msg: 'User already exists' });
 
     const hashed = await bcrypt.hash(password, 10);
-    user = new User({ username, email, password: hashed });
+    user = new User({ username, email, password: hashed, wallet: 0 }); // default wallet value
     await user.save();
 
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(201).json({ token });
+    res.status(201).json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        wallet: user.wallet || 0,
+      },
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
@@ -24,6 +33,7 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
 
@@ -33,8 +43,17 @@ exports.login = async (req, res) => {
     const payload = { user: { id: user.id } };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.json({ token });
+    res.json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        wallet: user.wallet || 0,
+      },
+    });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };

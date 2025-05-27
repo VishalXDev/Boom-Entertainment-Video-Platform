@@ -1,57 +1,34 @@
-# Boom Entertainment Video Platform
+# BOOM Entertainment Full-Stack Project
 
-A Next.js + Tailwind CSS video streaming platform featuring short and long videos with user authentication, video purchases, comments, and gifting.
+This repository contains the full-stack application for BOOM Entertainment, a social streaming platform with user authentication, video upload, wallet system, and more.
+
+## Project Structure
+
+- `/backend` — Express.js REST API server
+- `/frontend` — Next.js React frontend app
 
 ## Features
 
-- User authentication (sign up, login)
-- Upload and watch short-form and long-form videos
-- Purchase paid videos
-- Comment on videos
-- Gift creators with virtual currency
-- Wallet balance tracking
-
-## Tech Stack
-
-- Next.js (React framework)
-- Tailwind CSS for styling
-- Node.js backend (API)
-- MongoDB (or other DB for persistence)
-- Axios for API calls
+- User authentication (register, login, logout)
+- Video upload and management (short and long-form)
+- Wallet with transaction history and adding funds
+- User profile page with uploaded and purchased videos
+- Protected routes with JWT authentication
+- Commenting and gifting system (optional)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js v16+ installed
-- MongoDB or your preferred database running
+- Node.js (v16 or later recommended)
+- npm or yarn
+- MongoDB (local or cloud)
 
-### Installation
+### Setup Backend
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/your-username/boom-entertainment.git
-   cd boom-entertainment
-Contributing
-Feel free to open issues or submit pull requests to improve the project.
-
-License
-MIT License
-
-Enjoy streaming! 🎬
-
-yaml
-Copy
-Edit
-
----
-
-## Summary about `utils` folder
-
-- **Empty `utils` is normal early on.**  
-- It’s a future-proof folder to keep shared helper functions to avoid duplication.  
-- When you start needing reusable pure functions or formatters, put them there.
-
----
-
-If you want, I can help you create some initial utility functions (like date formatting or video URL parsers) to put inside `utils` — just ask!
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your environment variables
+npm run dev

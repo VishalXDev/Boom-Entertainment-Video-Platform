@@ -1,15 +1,16 @@
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
-const API = axios.create({
+const api = axios.create({
   baseURL: 'http://localhost:5000/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Add JWT token automatically to each request if token exists
-API.interceptors.request.use((req) => {
-  const token = Cookies.get('token');
-  if (token) req.headers.Authorization = `Bearer ${token}`;
-  return req;
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
-export default API;
+export default api;

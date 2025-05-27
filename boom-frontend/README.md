@@ -1,57 +1,64 @@
-# Boom Entertainment Video Platform
+# BOOM Entertainment Frontend
 
-A Next.js + Tailwind CSS video streaming platform featuring short and long videos with user authentication, video purchases, comments, and gifting.
+This is the frontend application for BOOM Entertainment built with Next.js and React.
 
 ## Features
 
-- User authentication (sign up, login)
-- Upload and watch short-form and long-form videos
-- Purchase paid videos
-- Comment on videos
-- Gift creators with virtual currency
-- Wallet balance tracking
+- User Authentication (Register, Login, Logout) with JWT
+- User Profile displaying username, email, wallet balance
+- Display uploaded videos and purchased videos
+- Wallet page to add funds and view transaction history
+- Uses Axios with token interceptor for API requests
 
-## Tech Stack
+## Requirements
 
-- Next.js (React framework)
-- Tailwind CSS for styling
-- Node.js backend (API)
-- MongoDB (or other DB for persistence)
-- Axios for API calls
+- Node.js v16 or higher
+- Backend API running and accessible
 
-## Getting Started
+## Setup Instructions
 
-### Prerequisites
+1. Clone the repository and navigate to the frontend folder:
 
-- Node.js v16+ installed
-- MongoDB or your preferred database running
+```bash
+cd frontend
+Install dependencies:
 
-### Installation
+bash
+Copy code
+npm install
+Create a .env.local file in the frontend folder with the backend URL:
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/your-username/boom-entertainment.git
-   cd boom-entertainment
-Contributing
-Feel free to open issues or submit pull requests to improve the project.
+ini
+Copy code
+NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+Run the development server:
+
+bash
+Copy code
+npm run dev
+Open http://localhost:3000 in your browser.
+
+Environment Variables
+NEXT_PUBLIC_BACKEND_URL — URL of the backend API server
+
+Scripts
+npm run dev — Start development server
+
+npm run build — Build production app
+
+npm start — Start production server
+
+Notes
+The app uses an Axios instance configured to automatically include JWT token stored in localStorage.
+
+Make sure your backend API server is running and accessible.
 
 License
-MIT License
-
-Enjoy streaming! 🎬
+MIT
 
 yaml
-Copy
-Edit
+Copy code
 
 ---
 
-## Summary about `utils` folder
-
-- **Empty `utils` is normal early on.**  
-- It’s a future-proof folder to keep shared helper functions to avoid duplication.  
-- When you start needing reusable pure functions or formatters, put them there.
-
----
-
-If you want, I can help you create some initial utility functions (like date formatting or video URL parsers) to put inside `utils` — just ask!
+If you want, I can help you create the **root README.md** or the backend README.md too!

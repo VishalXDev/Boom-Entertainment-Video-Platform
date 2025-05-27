@@ -26,10 +26,19 @@ app.use('/api/gifts', giftRoutes);
 // Root Route
 app.get('/', (req, res) => res.send('Boom API Running...'));
 
+// Health Check Route
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 // DB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => console.error('❌ DB error:', err));
+  .catch(err => console.error('❌ MongoDB connection error:', err.message));
+
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ msg: 'Server error' });
+});
 
 // Start Server
 const PORT = process.env.PORT || 5000;
