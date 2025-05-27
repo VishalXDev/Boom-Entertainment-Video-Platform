@@ -1,8 +1,8 @@
+import { useEffect, useState, useContext } from 'react';
 import { useRouter } from 'next/router';
-import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function VideoDetails() {
   const router = useRouter();
@@ -10,233 +10,173 @@ export default function VideoDetails() {
   const { user, loading } = useContext(AuthContext);
 
   const [video, setVideo] = useState(null);
-  const [hasPurchased, setHasPurchased] = useState(false);
-  const [loadingVideo, setLoadingVideo] = useState(false);
-  const [error, setError] = useState(null);
-  const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const [purchaseMsg, setPurchaseMsg] = useState('');
-
-  // Comments state
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  const [commentLoading, setCommentLoading] = useState(false);
-  const [commentError, setCommentError] = useState(null);
+  const [giftAmount, setGiftAmount] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    if (!loading && id) {
-      fetchVideoDetails();
-      fetchComments();
-    }
-  }, [loading, id]);
+    if (id) fetchVideo();
+  }, [id]);
 
-  // Fetch video details
-  const fetchVideoDetails = async () => {
-    setLoadingVideo(true);
-    setError(null);
-    const token = localStorage.getItem('token');
+  const fetchVideo = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/videos/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load video');
+      const res = await fetch(`${BACKEND_URL}/api/videos/${id}`);
       const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || 'Failed to fetch video');
       setVideo(data.video);
-      setHasPurchased(data.hasPurchased);
+      setComments(data.comments);
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoadingVideo(false);
+      setErrorMsg(err.message);
     }
   };
 
-  // Fetch comments for video
-  const fetchComments = async () => {
-    setCommentError(null);
-    const token = localStorage.getItem('token');
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/comments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load comments');
-      const data = await res.json();
-      setComments(data);
-    } catch (err) {
-      setCommentError(err.message);
+  const handleGift = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (!giftAmount || giftAmount <= 0) {
+      setErrorMsg('Please enter a valid gift amount.');
+      return;
     }
-  };
-
-  // Add a new comment
-  const handleAddComment = async (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    setCommentLoading(true);
-    setCommentError(null);
-
-    const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/comments`, {
+      const res = await fetch(`${BACKEND_URL}/api/gifts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
-        body: JSON.stringify({ videoId: id, text: newComment }),
+        body: JSON.stringify({ videoId: id, amount: giftAmount }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Failed to add comment');
-      setNewComment('');
-      fetchComments();
+      if (!res.ok) throw new Error(data.msg || 'Gift failed');
+      setSuccessMsg('Gift sent successfully!');
+      setGiftAmount('');
     } catch (err) {
-      setCommentError(err.message);
-    } finally {
-      setCommentLoading(false);
+      setErrorMsg(err.message);
     }
   };
 
-  // Handle video purchase
-  const handlePurchase = async () => {
-    setPurchaseLoading(true);
-    setPurchaseMsg('');
-    const token = localStorage.getItem('token');
+  const handleComment = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    if (!commentText.trim()) {
+      setErrorMsg('Comment cannot be empty.');
+      return;
+    }
     try {
-      const res = await fetch(`${API_BASE_URL}/api/videos/${id}/purchase`, {
+      const res = await fetch(`${BACKEND_URL}/api/comments`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ videoId: id, text: commentText }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Purchase failed');
-      setHasPurchased(true);
-      setPurchaseMsg('Purchase successful!');
+      if (!res.ok) throw new Error(data.msg || 'Comment failed');
+      setComments((prev) => [...prev, data.comment]);
+      setSuccessMsg('Comment posted!');
+      setCommentText('');
     } catch (err) {
-      setPurchaseMsg(err.message);
-    } finally {
-      setPurchaseLoading(false);
+      setErrorMsg(err.message);
     }
   };
 
-  if (loading || loadingVideo) return <p>Loading video details...</p>;
-  if (error) return <p className="text-red-600">Error: {error}</p>;
-  if (!video) return null;
+  if (!video) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-xl font-semibold">
+        Loading video...
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      {/* Video Info */}
-      <h1 className="text-3xl font-bold mb-4">{video.title}</h1>
-      <p className="mb-2 text-gray-700">{video.description || 'No description'}</p>
-      <p className="mb-4 text-gray-600">By: {video.creator?.username || 'Unknown'}</p>
-      <p className="mb-4 font-semibold">Type: {video.type}</p>
+    <div className="max-w-3xl mx-auto mt-8 px-4">
+      <div className="bg-white shadow-lg rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-2">{video.title}</h1>
+        <p className="text-sm text-gray-600 mb-4">Uploaded by {video.uploader?.username || 'Unknown'}</p>
 
-      {/* Video Player */}
-      {video.type === 'short' && video.filePath && (
-        <video controls className="w-full rounded shadow">
-          <source src={`${API_BASE_URL}${video.filePath}`} type="video/mp4" />
+        <video controls className="w-full rounded mb-4 bg-black">
+          <source src={video.videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-      )}
 
-      {/* Purchase or Watch for long videos */}
-      {video.type === 'long' && (
-        <>
-          {video.price > 0 && !hasPurchased ? (
-            <>
-              <p className="mb-4 font-semibold text-red-600">
-                Price: ${video.price.toFixed(2)}
-              </p>
-              <button
-                onClick={handlePurchase}
-                disabled={purchaseLoading}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-                aria-disabled={purchaseLoading}
-                aria-label="Purchase Video"
-              >
-                {purchaseLoading ? 'Processing...' : 'Purchase Video'}
-              </button>
-              {purchaseMsg && (
-                <p
-                  className={`mt-2 ${
-                    purchaseMsg.includes('successful') ? 'text-green-600' : 'text-red-600'
-                  }`}
-                  role="alert"
-                >
-                  {purchaseMsg}
-                </p>
-              )}
-            </>
-          ) : (
-            <div className="mb-4">
-              <a
-                href={video.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 underline"
-              >
-                Watch Video
-              </a>
-            </div>
+        <p className="mb-4 text-gray-800">{video.description}</p>
+
+        <div className="mb-4">
+          <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+            Type: {video.type}
+          </span>
+          {video.type === 'long' && (
+            <span className="ml-3 inline-block bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
+              Price: ${video.price}
+            </span>
           )}
-        </>
-      )}
+        </div>
 
-      {/* Comments Section */}
-      <section className="mt-8" aria-label="Comments Section">
-        <h2 className="text-2xl font-semibold mb-4">Comments</h2>
+        {errorMsg && <p className="text-red-600 bg-red-100 px-4 py-2 rounded mb-2">{errorMsg}</p>}
+        {successMsg && <p className="text-green-600 bg-green-100 px-4 py-2 rounded mb-2">{successMsg}</p>}
 
-        {/* New comment form */}
-        {user ? (
-          <form onSubmit={handleAddComment} className="mb-6">
-            <textarea
-              className="w-full p-2 border rounded mb-2"
-              rows={3}
-              placeholder="Add a comment..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              disabled={commentLoading}
-              aria-label="Add a comment"
-            />
-            <button
-              type="submit"
-              disabled={commentLoading}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {commentLoading ? 'Posting...' : 'Post Comment'}
-            </button>
-            {commentError && (
-              <p className="text-red-600 mt-1" role="alert">
-                {commentError}
-              </p>
-            )}
-          </form>
-        ) : (
-          <p className="mb-6 italic text-gray-600">Log in to post comments.</p>
+        {/* Gift section */}
+        {user && user._id !== video.uploader?._id && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-2">Send Gift</h3>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                placeholder="Amount (USD)"
+                value={giftAmount}
+                onChange={(e) => setGiftAmount(e.target.value)}
+                className="border px-3 py-2 rounded w-40"
+              />
+              <button
+                onClick={handleGift}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+              >
+                Send Gift
+              </button>
+            </div>
+          </div>
         )}
 
-        {/* Comments List */}
-        {comments.length === 0 && <p>No comments yet.</p>}
-        <ul>
-          {comments.map((c) => (
-            <li key={c._id} className="mb-4 border-b border-gray-300 pb-2">
-              <p className="font-semibold">{c.user?.username || 'Anonymous'}</p>
-              <p>{c.text}</p>
-              <p className="text-xs text-gray-500">
-                {new Date(c.createdAt).toLocaleString()}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </section>
+        {/* Comments Section */}
+        <div>
+          <h2 className="text-lg font-bold mb-3">Comments</h2>
+
+          {comments.length === 0 ? (
+            <p className="text-gray-500 italic">No comments yet.</p>
+          ) : (
+            <ul className="space-y-3 mb-4">
+              {comments.map((c) => (
+                <li key={c._id} className="bg-gray-100 rounded px-4 py-2">
+                  <p className="text-sm font-medium">{c.user?.username || 'Anonymous'}</p>
+                  <p className="text-sm">{c.text}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {user && (
+            <div className="mt-4">
+              <textarea
+                rows={3}
+                placeholder="Add a comment..."
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="w-full border px-3 py-2 rounded mb-2"
+              />
+              <button
+                onClick={handleComment}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+              >
+                Post Comment
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
-{/* Gift Sending Section */}
-<section className="mt-8" aria-label="Send Gift Section">
-  <h2 className="text-2xl font-semibold mb-4">Send a Gift</h2>
-  {user ? (
-    <GiftForm
-      videoId={id}
-      toCreatorId={video.creator?._id}
-      onGiftSent={() => alert('Gift sent!')}
-    />
-  ) : (
-    <p className="italic text-gray-600">Log in to send gifts.</p>
-  )}
-</section>

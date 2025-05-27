@@ -11,8 +11,7 @@ export default function Wallet() {
 
   useEffect(() => {
     if (user && token) {
-      api
-        .get('/wallet/history')
+      api.get('/wallet/history')
         .then((res) => setTransactions(res.data))
         .catch(console.error);
     }
@@ -32,16 +31,16 @@ export default function Wallet() {
   };
 
   if (loading) return <p className="p-4">Loading...</p>;
-  if (!user) return <p className="p-4">You need to log in to see this page.</p>;
+  if (!user) return <p className="p-4">Please log in to access your wallet.</p>;
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-4">My Wallet</h1>
+      <h1 className="text-3xl font-bold mb-6">My Wallet</h1>
       <p className="mb-2">Current Balance: <strong>${user.wallet?.toFixed(2) ?? '0.00'}</strong></p>
 
       <div className="mb-6">
         <label className="block mb-1 font-medium">Add Funds</label>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="number"
             min="1"
@@ -66,7 +65,7 @@ export default function Wallet() {
       ) : (
         <ul className="space-y-2">
           {transactions.map((tx) => (
-            <li key={tx._id} className="border p-3 rounded">
+            <li key={tx._id} className="border p-3 rounded bg-white shadow-sm">
               <p><strong>{tx.type}</strong> of ${tx.amount.toFixed(2)}</p>
               <p className="text-sm text-gray-500">{new Date(tx.date).toLocaleString()}</p>
             </li>

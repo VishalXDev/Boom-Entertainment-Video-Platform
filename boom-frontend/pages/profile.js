@@ -9,58 +9,58 @@ export default function Profile() {
 
   useEffect(() => {
     if (user && token) {
-      api
-        .get('/videos/feed', { params: { creator: user._id } })
-        .then((res) => {
-          const myVideos = res.data.filter((v) => v.creator._id === user._id);
-          setVideos(myVideos);
-        })
+      api.get('/videos/feed', { params: { creator: user._id } })
+        .then((res) => setVideos(res.data.filter((v) => v.creator._id === user._id)))
         .catch(console.error);
-
-      api
-        .get('/videos/purchased')
+      api.get('/videos/purchased')
         .then((res) => setPurchased(res.data))
         .catch(console.error);
     }
   }, [user, token]);
 
   if (loading) return <p className="p-4">Loading...</p>;
-  if (!user) return <p className="p-4">You need to log in to see this page.</p>;
+  if (!user) return <p className="p-4">Please log in to see your profile.</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
-      <div className="mb-6 p-4 border rounded bg-gray-50">
+      <div className="mb-6 p-4 border rounded bg-gray-50 space-y-1">
         <p><strong>Username:</strong> {user.username}</p>
         <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Wallet Balance:</strong> ${user.wallet?.toFixed(2) ?? '0.00'}</p>
+        <p><strong>Wallet:</strong> ${user.wallet?.toFixed(2) ?? '0.00'}</p>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-4">My Uploaded Videos</h2>
-      {videos.length === 0 && <p>No videos uploaded yet.</p>}
-      <ul>
-        {videos.map((video) => (
-          <li key={video._id} className="mb-4 p-4 border rounded hover:shadow">
-            <h3 className="text-xl font-semibold">{video.title}</h3>
-            <p>{video.description}</p>
-            <p>Type: {video.type}</p>
-            {video.price > 0 && <p>Price: ${video.price}</p>}
-          </li>
-        ))}
-      </ul>
+      <h2 className="text-2xl font-semibold mb-4">Uploaded Videos</h2>
+      {videos.length === 0 ? (
+        <p>No videos uploaded yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {videos.map((video) => (
+            <li key={video._id} className="border p-4 rounded shadow-sm hover:shadow">
+              <h3 className="text-lg font-semibold">{video.title}</h3>
+              <p className="text-sm text-gray-700">{video.description}</p>
+              <p className="text-sm">Type: {video.type}</p>
+              {video.price > 0 && <p className="text-sm">Price: ${video.price}</p>}
+            </li>
+          ))}
+        </ul>
+      )}
 
       <h2 className="text-2xl font-semibold mt-10 mb-4">Purchased Videos</h2>
-      {purchased.length === 0 && <p>You haven’t purchased any videos yet.</p>}
-      <ul>
-        {purchased.map((video) => (
-          <li key={video._id} className="mb-4 p-4 border rounded hover:shadow">
-            <h3 className="text-xl font-semibold">{video.title}</h3>
-            <p>{video.description}</p>
-            <p>Creator: {video.creator?.username || 'Unknown'}</p>
-          </li>
-        ))}
-      </ul>
+      {purchased.length === 0 ? (
+        <p>You haven’t purchased any videos yet.</p>
+      ) : (
+        <ul className="space-y-4">
+          {purchased.map((video) => (
+            <li key={video._id} className="border p-4 rounded shadow-sm hover:shadow">
+              <h3 className="text-lg font-semibold">{video.title}</h3>
+              <p>{video.description}</p>
+              <p className="text-sm">Creator: {video.creator?.username || 'Unknown'}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
