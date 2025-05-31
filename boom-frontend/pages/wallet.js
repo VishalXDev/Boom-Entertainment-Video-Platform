@@ -8,7 +8,9 @@ export default function Wallet() {
   const [adding, setAdding] = useState(false);
   const [amount, setAmount] = useState(10);
   const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
 
+  // Fetch wallet transaction history
   useEffect(() => {
     if (user && token) {
       api.get('/wallet/history')
@@ -17,13 +19,34 @@ export default function Wallet() {
     }
   }, [user, token]);
 
+  // Add funds handler
   const handleAddFunds = async () => {
+    if (amount < 1) {
+      setError('Amount must be at least $1.');
+      return;
+    }
+
     setAdding(true);
+    setError('');
+    setSuccess('');
+
     try {
-      await api.post('/wallet/add', { amount });
+      const res = await api.post('/wallet/add', { amount });
+
       setSuccess(`Successfully added $${amount.toFixed(2)} to wallet.`);
-      setTimeout(() => location.reload(), 1500);
+
+      // Optionally update user wallet balance locally:
+      if (res.data && res.data.newBalance !== undefined) {
+        user.wallet = res.data.newBalance; // Direct mutation for quick demo - better to use a setter/context update
+      }
+
+      // Refetch transaction history to update list
+      const txRes = await api.get('/wallet/history');
+      setTransactions(txRes.data);
+
+      setAmount(10); // Reset amount input
     } catch (err) {
+      setError(err.response?.data?.msg || err.message || 'Failed to add funds.');
       console.error(err);
     } finally {
       setAdding(false);
@@ -36,7 +59,9 @@ export default function Wallet() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Wallet</h1>
-      <p className="mb-2">Current Balance: <strong>${user.wallet?.toFixed(2) ?? '0.00'}</strong></p>
+      <p className="mb-2">
+        Current Balance: <strong>${user.wallet?.toFixed(2) ?? '0.00'}</strong>
+      </p>
 
       <div className="mb-6">
         <label className="block mb-1 font-medium">Add Funds</label>
@@ -47,16 +72,18 @@ export default function Wallet() {
             className="border px-3 py-1 rounded w-32"
             value={amount}
             onChange={(e) => setAmount(Number(e.target.value))}
+            disabled={adding}
           />
           <button
             onClick={handleAddFunds}
-            disabled={adding}
-            className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+            disabled={adding || amount < 1}
+            className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700 disabled:opacity-50"
           >
             {adding ? 'Adding...' : 'Add Funds'}
           </button>
         </div>
         {success && <p className="text-green-600 mt-2">{success}</p>}
+        {error && <p className="text-red-600 mt-2">{error}</p>}
       </div>
 
       <h2 className="text-xl font-semibold mb-2">Transaction History</h2>

@@ -1,8 +1,7 @@
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { AuthContext } from '../context/AuthContext';
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import api from '../services/api';
 
 export default function Upload() {
   const router = useRouter();
@@ -17,9 +16,16 @@ export default function Upload() {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  if (!loading && !user) {
-    router.push('/login');
-    return null;
+  // Redirect if user is not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
+
+  if (!user) {
+    // Optionally, show loading or null while redirecting
+    return <p className="p-4">Redirecting to login...</p>;
   }
 
   const handleFileChange = (e) => {
@@ -41,6 +47,8 @@ export default function Upload() {
 
     setUploading(true);
     setErrorMsg('');
+    setSuccessMsg('');
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
@@ -49,19 +57,21 @@ export default function Upload() {
     formData.append('videoFile', videoFile);
 
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${BACKEND_URL}/api/videos/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+      const res = await api.post('/videos/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Upload failed');
       setSuccessMsg('Video uploaded successfully!');
-      setTimeout(() => router.push(`/videos/${data.video._id}`), 1500);
+      // Optionally reset form:
+      setTitle('');
+      setDescription('');
+      setType('short');
+      setPrice(0);
+      setVideoFile(null);
+
+      setTimeout(() => router.push(`/videos/${res.data.video._id}`), 1500);
     } catch (err) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.response?.data?.msg || err.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -124,7 +134,7 @@ export default function Upload() {
                 step="0.01"
                 className="w-full border px-3 py-2 rounded"
                 value={price}
-                onChange={(e) => setPrice(parseFloat(e.target.value))}
+                onChange={(e) => setPrice(Number(e.target.value) || 0)}
                 disabled={uploading}
               />
             </div>

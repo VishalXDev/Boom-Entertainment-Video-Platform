@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
+
 export default function Login() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '' });
@@ -18,8 +20,15 @@ export default function Login() {
     setError('');
     setLoading(true);
 
+    // Basic client-side validation
+    if (!form.email || !form.password) {
+      setError('Please enter both email and password.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -34,7 +43,7 @@ export default function Login() {
         router.push('/feed');
       }
     } catch (err) {
-      setError('Server error');
+      setError('Server error. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -53,34 +62,46 @@ export default function Login() {
         </div>
 
         {error && (
-          <div className="mb-4 text-red-600 bg-red-100 p-2 rounded text-sm text-center border border-red-200">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="mb-4 text-red-600 bg-red-100 p-2 rounded text-sm text-center border border-red-200"
+          >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
             <input
+              id="email"
               type="email"
               name="email"
               placeholder="your@email.com"
               value={form.email}
               onChange={handleChange}
               required
+              autoComplete="email"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
             <input
+              id="password"
               type="password"
               name="password"
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
               required
+              autoComplete="current-password"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
             />
           </div>

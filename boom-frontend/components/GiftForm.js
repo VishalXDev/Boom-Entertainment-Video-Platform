@@ -10,15 +10,19 @@ export default function GiftForm({ videoId, toCreatorId, onGiftSent }) {
   const handleGiftSend = async (e) => {
     e.preventDefault();
     setError(null);
-    if (!amount || Number(amount) <= 0) {
-      setError('Please enter a valid amount');
+
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount <= 0) {
+      setError('Please enter a valid amount greater than 0');
       return;
     }
 
     setLoading(true);
-    const token = localStorage.getItem('token');
 
     try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('You must be logged in to send gifts.');
+
       const res = await fetch(`${API_BASE_URL}/api/gifts`, {
         method: 'POST',
         headers: {
@@ -28,14 +32,15 @@ export default function GiftForm({ videoId, toCreatorId, onGiftSent }) {
         body: JSON.stringify({
           toCreator: toCreatorId,
           video: videoId,
-          amount: Number(amount),
+          amount: numAmount,
         }),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || 'Failed to send gift');
 
       setAmount('');
-      onGiftSent();
+      onGiftSent(); // callback to parent component, e.g., refresh UI or show success toast
     } catch (err) {
       setError(err.message);
     } finally {
@@ -53,6 +58,7 @@ export default function GiftForm({ videoId, toCreatorId, onGiftSent }) {
         placeholder="Enter amount"
         className="border p-2 rounded w-full mb-2"
         disabled={loading}
+        required
       />
       <button
         type="submit"

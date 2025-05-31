@@ -6,7 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 
 export default function Register() {
   const router = useRouter();
-  const { login } = useContext(AuthContext);
+  const { register } = useContext(AuthContext);
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,22 +21,10 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.msg || 'Registration failed');
-      } else {
-        login(data.token);
-        router.push('/feed');
-      }
+      await register(form.username, form.email, form.password);
+      router.push('/feed');
     } catch (err) {
-      setError('Server error');
+      setError(err.response?.data?.msg || 'Registration failed');
     } finally {
       setLoading(false);
     }
