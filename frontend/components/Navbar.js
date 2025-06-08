@@ -46,13 +46,13 @@ export default function Navbar() {
         <Link href="/">
           <a className="flex items-center space-x-1 hover:opacity-80 transition-opacity duration-200">
             <div className="bg-red-600 text-white px-3 py-1 rounded-md font-bold text-xl">
-              BOOM
+              BOOM&SHOOM
             </div>
           </a>
         </Link>
       </div>
 
-      {/* Center Section - Search Bar */}
+      Center Section - Search Bar
       <div className="flex-1 max-w-2xl mx-8 hidden md:block">
         <form onSubmit={handleSearch} className="flex items-center">
           <div className={`flex items-center flex-1 border rounded-full overflow-hidden transition-all duration-200 ${

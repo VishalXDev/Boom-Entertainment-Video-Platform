@@ -52,7 +52,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-white flex">
       <Head>
-        <title>Sign in - BOOM</title>
+        <title>Sign in - BOOM&Entertainment</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
