@@ -43,7 +43,7 @@ coverage
 .idea
 
 # Ignore package files (if you want)
-package.json
+# package.json
 package-lock.json
 
 # Docker files
